@@ -3,11 +3,11 @@ const users = express.Router();
 const db = require("../config/db");
 const jwt = require("jsonwebtoken");
 
-
 const secret_key = "secret-key";
 //Crear usuario
 users.post("/signup", async (req, res, next) => {
   try {
+    console.log("Entrando a registro de usuario");
     let queryEmail = await db.query(
       `SELECT user_email FROM users WHERE user_email = "${req.body.email}"`
     );
@@ -26,7 +26,7 @@ users.post("/signup", async (req, res, next) => {
       data: jwt.sign({
         user: req.body.name,
         email: req.body.email,
-      }),
+      },secret_key),
     });
   } catch (err) {
     console.log(err);
@@ -38,6 +38,7 @@ users.post("/signup", async (req, res, next) => {
 //Inicio de sesion
 users.post("/login", async (req, res, next) => {
   try {
+    console.log("Entrando a inicio de sesion");
     let query_password = await db.query(
       `SELECT user_password FROM users WHERE user_email = "${req.body.email}"`
     );
@@ -50,7 +51,7 @@ users.post("/login", async (req, res, next) => {
         data: jwt.sign({
           user: req.body.name,
           email: req.body.email,
-        }),
+        }, secret_key),
       });
     } else {
       return res

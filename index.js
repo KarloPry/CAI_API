@@ -1,5 +1,6 @@
 //Dependencias
 const express = require('express');
+const fs = require('fs');
 const app = express();
 //Middleware
 const cors = require('./middleware/cors');
@@ -12,6 +13,7 @@ app.use(cors);
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //App routes
+app.use('/uploads/pdfs',express.static('./uploads/pdfs'));
 app.use('/api/auth', auth);
 app.use('/api/docs', docs);
 
