@@ -25,7 +25,7 @@ docs.get("/:uid", async (req, res, next) => {
     return next(new HttpError(500, "Ocurrio un error en el servidor"));
   }
 });
-docs.post("/:uid/new", async (req, res, next) => {
+docs.post("/:uid/new", async (req, res, next) => {   
   try {
     const promptResponse = await axios
       .post(
@@ -147,3 +147,13 @@ docs.delete("/:uid/:docid", async (req, res, next) => {
       .json({ status: 500, message: "An error ocurred on the server" });
   }
 });
+docs.post('/getPath', async(req,res,next)=>{
+    try{
+        let query = `SELECT doc_path FROM docs WHERE doc_id = ${req.body.docid}`
+        const response = db.query(query);
+        return res.status(200).json({status: 200, message:"Got data", data: response[0]});
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({status:500, message: "Somethin went wrong"});
+    }
+})
