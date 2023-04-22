@@ -20,13 +20,20 @@ users.post("/signup", async (req, res, next) => {
       req.body.name
     }","${req.body.email}","${jwt.sign(req.body.password, secret_key)}")`;
     const response = await db.query(query);
+    const userId = await db.query(
+      `SELECT user_id FROM users WHERE user_email = '${req.body.email}'`
+    );
     return res.status(201).json({
       code: 201,
       message: "Todo cool",
-      data: jwt.sign({
-        user: req.body.name,
-        email: req.body.email,
-      },secret_key),
+      data: jwt.sign(
+        {
+          user: req.body.name,
+          email: req.body.email,
+        },
+        secret_key
+      ),
+      user: userId[0].user_id,
     });
   } catch (err) {
     console.log(err);
@@ -43,15 +50,23 @@ users.post("/login", async (req, res, next) => {
       `SELECT user_password FROM users WHERE user_email = "${req.body.email}"`
     );
     const hashedPass = jwt.sign(req.body.password, secret_key);
+    const userId = await db.query(
+      `SELECT user_id FROM users WHERE user_email = '${req.body.email}'`
+    );
+
     if (hashedPass == query_password[0].user_password) {
       return res.status(201).json({
         code: 201,
         message: "Autorizado",
         valid: "true",
-        data: jwt.sign({
-          user: req.body.name,
-          email: req.body.email,
-        }, secret_key),
+        data: jwt.sign(
+          {
+            user: req.body.name,
+            email: req.body.email,
+          },
+          secret_key
+        ),
+        user: userId[0].user_id,
       });
     } else {
       return res

@@ -8,10 +8,11 @@ const checkAuth = require("../middleware/check-auth");
 const docs = express.Router();
 const doc = new jsPDF();
 const app = express();
-const openaiApiKey = "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"; // Replace with your actual API key
+const openaiApiKey = "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"; // Replace with your actual API key
 let pathToPdf;
 
-app.use(checkAuth);
+// app.use(checkAuth);
+console.log("Authenticated");
 docs.get("/:uid", async (req, res, next) => {
   try {
     let query = `SELECT * FROM docs WHERE creator_id = ${req.params.uid}`;
@@ -25,7 +26,7 @@ docs.get("/:uid", async (req, res, next) => {
     return next(new HttpError(500, "Ocurrio un error en el servidor"));
   }
 });
-docs.post("/:uid/new", async (req, res, next) => {   
+docs.post("/:uid/new", async (req, res, next) => {
   try {
     const promptResponse = await axios
       .post(
@@ -100,6 +101,9 @@ docs.post("/:uid/new", async (req, res, next) => {
       )
       .then((response) => response.data.choices[0].message.content)
       .catch((error) => console.log(error));
+    if (req.body.contractor == undefined){
+      req.body.contractor = null;
+    }
     const tasks = JSON_TASKS.split(`\n`);
     let query = `INSERT INTO docs ( creator_id, doc_tasks, doc_limit_date, signer_id, doc_path) VALUES (${req.params.uid},'${tasks}','${DEADLINE}',${req.body.contractor},'${pathToPdf}')`;
     const responseQuery = await db.query(query);
@@ -118,9 +122,9 @@ docs.post("/:uid/new", async (req, res, next) => {
       .json({ status: 500, message: "An error ocurred on the server" });
   }
 });
-docs.get("/:uid/:docid", async (req, res, next) => {
+docs.put("/:uid/", async (req, res, next) => {
   try {
-    let query = `SELECT * FROM docs WHERE creator_id = ${req.params.uid} AND doc_id = ${req.params.docid}`;
+    let query = `SELECT * FROM docs WHERE creator_id = ${req.params.uid} AND doc_id = ${req.body.docid}`;
     const response = await db.query(query);
     return res
       .status(200)
@@ -147,13 +151,17 @@ docs.delete("/:uid/:docid", async (req, res, next) => {
       .json({ status: 500, message: "An error ocurred on the server" });
   }
 });
-docs.post('/getPath', async(req,res,next)=>{
-    try{
-        let query = `SELECT doc_path FROM docs WHERE doc_id = ${req.body.docid}`
-        const response = db.query(query);
-        return res.status(200).json({status: 200, message:"Got data", data: response[0]});
-    }catch(err){
-        console.log(err);
-        return res.status(500).json({status:500, message: "Somethin went wrong"});
-    }
-})
+docs.post("/getPath", async (req, res, next) => {
+  try {
+    let query = `SELECT doc_path FROM docs WHERE doc_id = ${req.body.docid}`;
+    const response = db.query(query);
+    return res
+      .status(200)
+      .json({ status: 200, message: "Got data", data: response[0] });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status: 500, message: "Somethin went wrong" });
+  }
+});
